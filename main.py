@@ -1,6 +1,5 @@
-f = open('input/f.txt', 'r')
-data = f.read()
-f.close()
+with open('input/f.txt', 'r') as f:
+    data = f.read().lower()
 
 keyword = input("Enter your character, word or sentence: ")
 
