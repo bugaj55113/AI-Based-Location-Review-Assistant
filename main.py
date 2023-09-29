@@ -7,35 +7,54 @@ def load_file():
         data_text.delete(1.0, tk.END)
         data_text.insert(tk.END, f.read())
 
-def count_keyword():
+def count_keyword_occurrences():
     data = data_text.get(1.0, tk.END).lower()
     keyword = keyword_entry.get().lower()
     count = data.count(keyword)
     messagebox.showinfo("Results", f"Keyword {keyword} has occurred {count} times")
 
-#frequency_map = {x: data.count(x) for x in set(data)}
-#popular = max(frequency_map, key=frequency_map.get)
+def display_popular_character():
+    data = data_text.get(1.0, tk.END)
+    frequency_map = {x: data.count(x) for x in set(data)}
+    del frequency_map[" "]
+    popular = max(frequency_map, key=frequency_map.get)
+    popular_char.config(text=f"Most popular character is: {popular}")
 
+def display_popular_word():
+    data = data_text.get(1.0, tk.END)
+    words = data.split()
+    frequency_map = {x: words.count(x) for x in set(words)}
+    popular = max(frequency_map, key=frequency_map.get)
+    popular_word.config(text=f"Most popular word is: {popular}")
 
-# Create a main window
-root = tk.Tk()
-root.title("Keyword Counter")
+def create_gui():
+    root = tk.Tk()
+    root.title("Keyword Counter")
 
-# Load button
-load_button = tk.Button(root, text="Load File", command=load_file)
-load_button.pack(pady=20)
+    load_button = tk.Button(root, text="Load File", command=load_file)
+    load_button.grid(row=0, column=0, columnspan=2, pady=20, padx=5)
 
-# Text field to display loaded data
-data_text = tk.Text(root, height=10, width=40)
-data_text.pack(pady=20)
+    data_text = tk.Text(root, height=10, width=40)
+    data_text.grid(row=1, column=0, columnspan=2, pady=20, padx=5)
 
-# Keyword input field
-keyword_entry = tk.Entry(root, width=30)
-keyword_entry.pack(pady=20)
+    keyword_entry = tk.Entry(root, width=30)
+    keyword_entry.grid(row=2, column=0, columnspan=2, pady=20, padx=5)
 
-# Button to start counting
-count_button = tk.Button(root, text="Count Keyword", command=count_keyword)
-count_button.pack(pady=20)
+    count_button = tk.Button(root, text="Count Keyword", command=count_keyword_occurrences)
+    count_button.grid(row=3, column=0, columnspan=2, pady=20, padx=5)
 
-# Launch the main window and allow user interaction
-root.mainloop()
+    popular_button = tk.Button(root, text="Most popular character", command=display_popular_character)
+    popular_button.grid(row=4, column=0, pady=10, padx=5)
+
+    popular_char = tk.Label(root, height=2, width=30)
+    popular_char.grid(row=5, column=0, pady=5, padx=5)
+
+    popular_word_button = tk.Button(root, text="Most popular word", command=display_popular_word)
+    popular_word_button.grid(row=4, column=1, pady=10, padx=5)
+
+    popular_word = tk.Label(root, height=2, width=30)
+    popular_word.grid(row=5, column=1, pady=5, padx=5)
+
+    root.mainloop()
+
+create_gui()
