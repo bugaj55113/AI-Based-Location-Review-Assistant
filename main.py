@@ -1,6 +1,11 @@
 import tkinter as tk
 from tkinter import filedialog, messagebox
 
+data_text = None
+popular_char = None
+popular_word = None
+keyword_entry = None
+
 def load_file():
     file_path = filedialog.askopenfilename()
     with open(file_path, 'r') as f:
@@ -28,6 +33,8 @@ def display_popular_word():
     popular_word.config(text=f"Most popular word is: {popular}")
 
 def create_gui():
+    global data_text, popular_char, popular_word, keyword_entry
+
     root = tk.Tk()
     root.title("Keyword Counter")
 
