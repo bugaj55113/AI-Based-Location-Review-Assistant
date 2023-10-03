@@ -2,6 +2,7 @@ import tkinter as tk
 import openai
 import os
 import configparser
+import re
 from tkinter import filedialog, messagebox
 
 secrets_path = os.path.join(os.getcwd(), 'secrets')
@@ -18,6 +19,7 @@ class KeywordCounterApp:
         self.keyword_entry = tk.Entry(self.root, width=30)
         self.popular_char = tk.Label(self.root, height=2, width=30)
         self.popular_word = tk.Label(self.root, height=2, width=30)
+        self.synonyms_show = tk.Label(self.root, height=10, anchor='w', justify=tk.LEFT)
         self.popular = None
 
         self._create_widgets()
@@ -42,6 +44,8 @@ class KeywordCounterApp:
         popular_word_button.grid(row=4, column=1, pady=10, padx=5)
 
         self.popular_word.grid(row=5, column=1, pady=5, padx=5)
+
+        self.synonyms_show.grid(row=6, column=1, columnspan=1, pady=5, padx=5)
 
     def load_file(self):
         file_path = filedialog.askopenfilename()
@@ -68,6 +72,7 @@ class KeywordCounterApp:
         frequency_map = {x: words.count(x) for x in set(words)}
         self.popular = max(frequency_map, key=frequency_map.get)
         self.popular_word.config(text=f"Most popular word is: {self.popular}")
+        self.display_synonyms()
 
     def get_synonyms(self):
         api_path = config['DEFAULT']['OPENAI_API_PATH']
@@ -79,16 +84,21 @@ class KeywordCounterApp:
         response = openai.ChatCompletion.create(
         model="gpt-3.5-turbo",
         messages=[
-            {"role": "user", "content": f"5 synonimów słowa: '{self.popular}'"}
+            {"role": "user", "content": f"5 synonimów słowa: '{self.popular}' oddzielone ', '"}
         ]
         )
     
         content = response.choices[0]['message']['content']
-        
-        return content.strip().split(", ")  
+        synonyms = content.strip().split(", ") 
+        cleaned_synonyms = [re.sub(r'[\n\d]', '', synonym) for synonym in synonyms]
+        formatted_output = "\n".join(f"• {synonym}" for synonym in cleaned_synonyms)
+        return  formatted_output
+    
+    def display_synonyms(self):
+        self.synonyms_show.config(text=f"5 synonyms to word {self.popular}: \n{self.get_synonyms()}")
 
 if __name__ == "__main__":
     root = tk.Tk()
     app = KeywordCounterApp(root)
     root.mainloop()
-    print(app.get_synonyms())    
+    
