@@ -1,5 +1,12 @@
 import tkinter as tk
+import openai
+import os
+import configparser
 from tkinter import filedialog, messagebox
+
+secrets_path = os.path.join(os.getcwd(), 'secrets')
+config = configparser.ConfigParser()
+config.read(os.path.join(secrets_path, 'config.ini'))
 
 class KeywordCounterApp:
 
@@ -11,6 +18,7 @@ class KeywordCounterApp:
         self.keyword_entry = tk.Entry(self.root, width=30)
         self.popular_char = tk.Label(self.root, height=2, width=30)
         self.popular_word = tk.Label(self.root, height=2, width=30)
+        self.popular = None
 
         self._create_widgets()
 
@@ -58,10 +66,29 @@ class KeywordCounterApp:
         data = self.data_text.get(1.0, tk.END)
         words = data.split()
         frequency_map = {x: words.count(x) for x in set(words)}
-        popular = max(frequency_map, key=frequency_map.get)
-        self.popular_word.config(text=f"Most popular word is: {popular}")
+        self.popular = max(frequency_map, key=frequency_map.get)
+        self.popular_word.config(text=f"Most popular word is: {self.popular}")
+
+    def get_synonyms(self):
+        api_path = config['DEFAULT']['OPENAI_API_PATH']
+        with open(api_path, "r") as file:
+            api_key = file.readline().strip()
+
+        openai.api_key = api_key
+
+        response = openai.ChatCompletion.create(
+        model="gpt-3.5-turbo",
+        messages=[
+            {"role": "user", "content": f"5 synonimów słowa: '{self.popular}'"}
+        ]
+        )
+    
+        content = response.choices[0]['message']['content']
+        
+        return content.strip().split(", ")  
 
 if __name__ == "__main__":
     root = tk.Tk()
     app = KeywordCounterApp(root)
-    root.mainloop()    
+    root.mainloop()
+    print(app.get_synonyms())    
