@@ -4,6 +4,9 @@ import os
 import configparser
 import re
 from tkinter import filedialog, messagebox
+from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
+from langdetect import detect
+
 
 secrets_path = os.path.join(os.getcwd(), 'secrets')
 config = configparser.ConfigParser()
@@ -20,7 +23,11 @@ class KeywordCounterApp:
         self.popular_char = tk.Label(self.root, height=2, width=30)
         self.popular_word = tk.Label(self.root, height=2, width=30)
         self.synonyms_show = tk.Label(self.root, height=10, anchor='w', justify=tk.LEFT)
+        self.sentiment_show = tk.Label(self.root, height=2, width=30)
         self.popular = None
+        self.score = None
+        self.sentence = None
+        self.translated_text = None
 
         self._create_widgets()
 
@@ -47,11 +54,17 @@ class KeywordCounterApp:
 
         self.synonyms_show.grid(row=6, column=1, columnspan=1, pady=5, padx=5)
 
+        sentiment_button = tk.Button(self.root, text="Show text sentiment", command=self.display_sentiment)
+        sentiment_button.grid(row=7, column=0, columnspan=2, pady=20, padx=5)
+
+        self.sentiment_show.grid(row=8, column=0, columnspan=2, pady=5, padx=5)
+
     def load_file(self):
         file_path = filedialog.askopenfilename()
         with open(file_path, 'r') as f:
             self.data_text.delete(1.0, tk.END)
             self.data_text.insert(tk.END, f.read())
+            self.sentence = self.data_text.get(1.0, tk.END)
 
     def count_keyword_occurrences(self):
         data = self.data_text.get(1.0, tk.END).lower()
@@ -97,8 +110,58 @@ class KeywordCounterApp:
     def display_synonyms(self):
         self.synonyms_show.config(text=f"5 synonyms to word {self.popular}: \n{self.get_synonyms()}")
 
+    def sentiment_analysis(self):
+        self.translate_into_english()
+        analyzer = SentimentIntensityAnalyzer()
+        self.score = analyzer.polarity_scores(self.translated_text)
+
+    def display_sentiment(self):
+        self.sentiment_analysis()
+        if self.score['compound'] > 0.05:
+            #return "Positive"
+            self.sentiment_show.config(text=f"Positive")
+        elif self.score['compound'] < -0.05:
+            #return "Negative"
+            self.sentiment_show.config(text=f"Negative")
+        else:
+            #return "Neutral"
+            self.sentiment_show.config(text=f"Neutral")
+
+    def detect_language(self):
+        try:
+            lang = detect(self.sentence)
+            if lang == 'en':
+                return 'ENG'
+            else:
+                #print('OTHER')
+                return 'OTHER'
+        except:
+            return 'OTHER'
+        
+    def translate_into_english(self):
+        if self.detect_language() == 'OTHER':
+            api_path = config['DEFAULT']['OPENAI_API_PATH']
+            with open(api_path, "r") as file:
+                api_key = file.readline().strip()
+
+            openai.api_key = api_key
+
+            response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "user", "content": f"Translate '{self.sentence}' into english."}
+            ]
+            )
+
+            self.translated_text = response.choices[0]['message']['content']
+            #print(self.translated_text)
+        else:
+            self.translated_text = self.sentence
+            
+
+        
+
 if __name__ == "__main__":
     root = tk.Tk()
     app = KeywordCounterApp(root)
     root.mainloop()
-    
