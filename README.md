@@ -34,7 +34,7 @@ This project is an evolving application aimed at assisting businesses or individ
 This project is currently under the [MIT License](LICENSE). Details can be found in the LICENSE file.
 
 ## 🖋 **Author**
-Michał Bugaj
+- **Michał Bugaj**
 
 ---
 
